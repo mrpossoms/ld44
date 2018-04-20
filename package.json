@@ -1,0 +1,24 @@
+{
+  "name": "game-boilerplate",
+  "version": "0.0.0",
+  "description": "Boilerplate for web games",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.13.2",
+    "express": "^4.13.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrpossoms/js-game-boilerplate.git"
+  },
+  "author": "Kirk Roerig",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrpossoms/js-game-boilerplate/issues"
+  },
+  "homepage": "https://github.com/mrpossoms/js-game-boilerplate"
+}
