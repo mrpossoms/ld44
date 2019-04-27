@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var game = require('./server.js');
 
 app.use(express.static('static'));
 
@@ -7,7 +8,10 @@ app.get('/', function(req, res){
 	res.sendFile('index.html');
 });
 
-var server = app.listen(process.env.PORT ? process.env.PORT : 3000, function () {
+var http = require('http').Server(app);
+game.server(http, 8080);
+
+var server = http.listen(process.env.PORT ? process.env.PORT : 3000, function () {
   var host = server.address().address;
   var port = server.address().port;
 
