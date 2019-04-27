@@ -25,13 +25,45 @@ function loop()
 	var dt = $G.timer.tick();
 	time += dt;
 
-	console.log(time);
-
 	if(paused){
 
 	}
 
 	game.renderer.render( game.scene, game.camera );
+}
+
+function generate_planet()
+{
+	var cells = [];
+	var iso = new THREE.IcosahedronBufferGeometry( 2, 2 );
+	var material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
+
+	var verts = iso.attributes.position.array;
+	var norms = iso.attributes.normal.array;
+	for (var i = 0; i < iso.attributes.position.count; ++i)
+	{
+		var tri = new THREE.Geometry();
+		tri.vertices.push(verts[i * 3 + 0]);
+		tri.vertices.push(verts[i * 3 + 1]);
+		tri.vertices.push(verts[i * 3 + 2]);
+		//tri.faceVertexUVs.push(iso.attributes.uv[i * 2 + 0]);
+		//tri.faceVertexUVs.push(iso.attributes.uv[i * 2 + 1]);
+
+		var norm = new THREE.Vector3(
+			norms[i * 3 + 0],
+			norms[i * 3 + 1],
+			norms[i * 3 + 2]
+		);
+		tri.faces.push(new THREE.Face3(0, 1, 2, norm));
+
+		cells.push({
+			geometry: {
+				cell: new THREE.Mesh(tri, material)
+			}
+		});
+	}
+
+	return cells;
 }
 
 function start()
@@ -47,11 +79,15 @@ function start()
 
 	var geometry = new THREE.IcosahedronBufferGeometry( 2, 2 );
 	var material = new THREE.MeshNormalMaterial({ wireframe: true });
-	// geometry.attributes.position.array[0] = 4;
-	game.planet.mesh = new THREE.Mesh( geometry, material );
-	game.scene.add( game.planet.mesh );
+	//game.planet.mesh = new THREE.Mesh( geometry, material );
+	//game.scene.add( game.planet.mesh );
 
+	var cells = generate_planet();
 
+	for (var i = cells.length; i--;)
+	{
+		game.scene.add(cells[i].geometry.cell);
+	}
 
 	game.camera.position.z = 5;
 
@@ -63,15 +99,15 @@ function start()
 	{
 		var t = e.pageX ? e : e.touches[0];
 
-		var x = t.pageX;
-		var y = t.pageY;
+		var x = (t.pageX / window.innerWidth) * 2 - 1;
+		var y = (t.pageY / window.innerHeight) * 2 + 1;
 
 		if (touch_start.length > 0)
 		{
 			var x_axis = new THREE.Vector3(1, 0, 0);
 			var y_axis = new THREE.Vector3(0, 1, 0);
-			var rot_x = new THREE.Quaternion().setFromAxisAngle(y_axis, (x - touch_start[0]) / 100);
-			var rot_y = new THREE.Quaternion().setFromAxisAngle(x_axis, (y - touch_start[1]) / 100);
+			var rot_x = new THREE.Quaternion().setFromAxisAngle(y_axis, (x - touch_start[0]) / 1);
+			var rot_y = new THREE.Quaternion().setFromAxisAngle(x_axis, (y - touch_start[1]) / 1);
 
 			game.planet.mesh.applyQuaternion(rot_x.multiply(rot_y));
 			touch_start = [ x, y ];
@@ -82,7 +118,10 @@ function start()
 	{
 		var t = e.pageX ? e : e.touches[0];
 
-		touch_start = [ t.pageX, t.pageY ];
+		var x = (t.pageX / window.innerWidth) * 2 - 1;
+		var y = (t.pageY / window.innerHeight) * 2 + 1;
+
+		touch_start = [ x, y ];
 	};
 
 	var end = function(e)
