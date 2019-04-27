@@ -30,7 +30,7 @@ function aspectRatio(){
 	return $G.canvas.height / $G.canvas.width;
 }
 
-function draw_state(s)
+function draw_state(s, dt)
 {
 	for (var r = 0; r < 10; ++r)
 	for (var c = 0; c < 10; ++c)
@@ -45,7 +45,11 @@ function draw_state(s)
 
 	for (var i = s.players.length; i--;)
 	{
-			
+		var player = s.players[i];
+		ctx.save();
+		ctx.transVec(player.pos);
+		reaper.walk['down'].draw(reaper.walk['down'].img, 1, dt, 0);
+		ctx.restore();
 	}
 }
 
@@ -53,7 +57,27 @@ function loop(){
 	var dt = $G.timer.tick();
 	time += dt;
 
-	draw_state(state.current);	
+	draw_state(state.current, dt);
+
+	dir = [ 0, 0 ]
+	moving = false
+	if ($G.input.keyboard.IsKeyDown(KEY_UP)) {
+		dir[1] += -1; moving = true;
+	}
+
+	if ($G.input.keyboard.IsKeyDown(KEY_DOWN)) {
+		dir[1] += 1; moving = true;
+	}
+
+	if ($G.input.keyboard.IsKeyDown(KEY_LEFT)) {
+		dir[0] += -1; moving = true;
+	}
+
+	if ($G.input.keyboard.IsKeyDown(KEY_RIGHT)) {
+		dir[0] += 1; moving = true;
+	}
+
+	if (moving) { socket.send({ command: 'move', payload: { dir: dir }}); }
 
 	if(paused){
 	}
@@ -63,7 +87,6 @@ function start(){
 	$G.init(loop, 'canvas').gfx.canvas.init();
 
 	socket = io();
-
 	socket.on('message', function(msg) {
 		switch (msg.command)
 		{

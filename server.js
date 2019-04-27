@@ -54,6 +54,7 @@ function player_con(player)
 		switch (msg.command)
 		{
 			case 'move':
+				console.log('moving');
 				player.state.dir = msg.payload.dir;
 				player.state.move = true;
 				break;
@@ -83,9 +84,10 @@ module.exports.server = function(http, port) {
 		for (var id in players)
 		{
 			var player = players[id];
-			if (player.move)
+			if (player.state.move)
 			{
 				player.state.pos = player.state.pos.add_vec(player.state.dir);
+				console.log(player.state.pos);
 				player.state.move = false;
 			}
 		}
@@ -102,6 +104,7 @@ module.exports.server = function(http, port) {
 					players: player_states
 				}
 			});
+
 		}
 	}, 16);
 };
