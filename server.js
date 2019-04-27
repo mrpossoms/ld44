@@ -3,10 +3,26 @@ const ATTACK_FRAMES = 10;
 var players = {};
 var humans = {};
 
+var isEmpty = function(dic)
+{
+	for (var key in dic) {
+		if (dic.hasOwnProperty(key)) { return false; }
+	}
+
+	return true;
+}
+
 Array.prototype.add_vec = function(arr)
 {
 	var a = new Array(this.length);
 	for (var i = this.length; i--;) { a[i] = this[i] + arr[i]; }
+	return a;
+}
+
+Array.prototype.sub_vec = function(arr)
+{
+	var a = new Array(this.length);
+	for (var i = this.length; i--;) { a[i] = this[i] - arr[i]; }
 	return a;
 }
 
@@ -27,7 +43,7 @@ Array.prototype.dist = function(arr)
 	var dist = 0;
 	for (var i = this.length; i--;)
 	{
-		dist += Math.pow(this[i] - arr ? arr[i] : 0, 2);
+		dist += Math.pow(this[i] - (arr ? arr[i] : 0), 2);
 	}
 
 	return Math.sqrt(dist);
@@ -38,8 +54,8 @@ function spawn_human_wave(number)
 	for (;number--;)
 	{
 		var t = Math.random() * (2 * 3.14);
-		var r = Math.random() * 100 + 230;
-		humans[i] = {
+		var r = Math.random() * 50 + 230;
+		humans[number] = {
 			pos: [ r * Math.cos(t), r * Math.sin(t) ],
 			dir: [ 0, 0 ],
 			hp: 1,
@@ -98,11 +114,16 @@ function player_con(player)
 
 module.exports.server = function(http, port) {
 	var io = require('socket.io')(http);
-
 	io.on('connection', player_con);
+
+	var wave_size = 10;
+	spawn_human_wave(wave_size);
 
 	// do game state update
 	setInterval(function() {
+
+		if (isEmpty(players)) { return; }
+
 		// update state
 		for (var id in players)
 		{
@@ -119,14 +140,14 @@ module.exports.server = function(http, port) {
 				if (player.state.action.progress == 5 && player.state.action.name == 'attack')
 				for (var id in humans)
 				{
-					var human = human[id];
+					var human = humans[id];
 					
 					if (human.pos.dist(player.state.pos) <= 16)
 					{
 						human.hp -= player.state.damage;
 					}
 
-					if (human.hp <= 0) { delete human[id]; }
+					if (human.hp <= 0) { delete humans[id]; }
 				}
 
 				player.state.action.progress--;
@@ -134,16 +155,25 @@ module.exports.server = function(http, port) {
 			else { player.state.action.name = ''; }
 		}
 
+		if (isEmpty(humans))
+		{
+			wave_size = Math.ceil(wave_size * 1.5);
+			spawn_human_wave(wave_size);
+		}
+
+		//console.log(JSON.stringify(humans));
 		for (var id in humans)
 		{
-			var human = human[id];
-			human.dir = [-human.pos[0], -human.pos[1]].norm().scale(0.1);
-			human.pos = pos.add_vec(human.dir);
+			var human = humans[id];
+			var diff = human.pos.sub_vec([320 >> 1, 320 >> 1]);
+			human.dir = diff.norm().scale(-0.5);
+			human.pos = human.pos.add_vec(human.dir);
 		}
 
 		var player_states = [], human_states = [];
 		for (var id in players) { player_states.push(players[id].state); }
 		for (var id in humans) { human_states.push(humans[id]); }
+
 
 		// send states to players
 		for (var id in players)

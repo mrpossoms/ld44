@@ -28,6 +28,15 @@ reaper = {
 
 };
 
+human = {
+	walk: {
+		down: null,
+		up: null,
+		left: null,
+		right: null
+	}
+};
+
 var images = [
 'ground1.png',
 'Grim_walk_down.png',
@@ -84,11 +93,13 @@ function draw_state(s, dt)
 
 	if (s == null) { return; }
 
-	s.players.sort(function(p0, p1) { return p1.pos[1] - p0.pos[1]; });
+	var all_sprites = s.players.concat(s.humans);
 
-	for (var i = s.players.length; i--;)
+	all_sprites.sort(function(p0, p1) { return p1.pos[1] - p0.pos[1]; });
+
+	for (var i = all_sprites.length; i--;)
 	{
-		var player = s.players[i];
+		var character = all_sprites[i];
 		/*
 		ctx.save();
 		ctx.transVec(player.pos);
@@ -111,15 +122,22 @@ function draw_state(s, dt)
 		ctx.restore();
 		*/
 
-		draw_character(reaper, player, dt, function(c) {
-			switch(player.action.name)
-			{
-				case 'attack':
-					return 'attack';
-					break;
-				default: return 'walk';
-			}
-		});
+		if (character.action)
+		{
+			draw_character(reaper, character, dt, function(c) {
+				switch(c.action.name)
+				{
+					case 'attack':
+						return 'attack';
+						break;
+					default: return 'walk';
+				}
+			});
+		}
+		else
+		{
+			draw_character(human, character, dt);
+		}
 	}
 }
 
@@ -180,6 +198,7 @@ function start(){
 	{
 		reaper.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 6, $G.assets.images['Grim_walk_' + dir + '.png'])
 		reaper.attack[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 15, $G.assets.images['Grim_attack_' + dir + '.png'])
+		human.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 4, 6, $G.assets.images['scientist_walk_' + dir + '.png'])
 	}
 
 	for (var num in { '1': 0 })
