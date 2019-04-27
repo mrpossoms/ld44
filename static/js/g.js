@@ -213,7 +213,7 @@ var $G = {
 	},
 	//--- Animation -------------------------------------------------------
 	animation: {
-		sprite: function(x, y, width, height, frameCount, fps){
+		sprite: function(x, y, width, height, frameCount, fps, img){
 			var ctx = $G.gfx.context;
 			var t = this;
 
@@ -225,6 +225,8 @@ var $G = {
 
 			// Draws and updates the animation
 			t.draw = $G.gfx.canvas.drawSprite;
+
+			t.img = img
 
 			t.bounds = function(center) {
 				var hw = t._w / 2, hh = t._h / 2;
@@ -256,8 +258,8 @@ var $G = {
 					this.context.msImageSmoothingEnabled     = false;
 					this.context.imageSmoothingEnabled       = false;
 
-					$G.canvas.width  = window.innerWidth / 4;
-					$G.canvas.height = window.innerHeight / 4;
+					$G.canvas.width  = 320;//window.innerWidth / 4;
+					$G.canvas.height = 320;//window.innerHeight / 4;
 				}
 				else{
 					// TODO error
