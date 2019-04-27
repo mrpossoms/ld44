@@ -22,7 +22,15 @@ reaper = {
 	}
 };
 
-$G.assets.images("imgs/").load(['ground1.png', 'Grim_walk_down.png'], function(){
+var images = [
+'ground1.png',
+'Grim_walk_down.png',
+'Grim_walk_right.png',
+'Grim_walk_up.png',
+'Grim_walk_left.png',
+];
+
+$G.assets.images("imgs/").load(images, function(){
 	start();
 });
 
@@ -43,12 +51,20 @@ function draw_state(s, dt)
 
 	if (s == null) { return; }
 
+	s.players.sort(function(p0, p1) { return p1.pos[1] - p0.pos[1]; });
+
 	for (var i = s.players.length; i--;)
 	{
 		var player = s.players[i];
 		ctx.save();
 		ctx.transVec(player.pos);
-		reaper.walk['down'].draw(reaper.walk['down'].img, 1, dt, 0);
+		
+		var anim_name = 'down';
+		if (player.dir[1] > 0) { anim_name = 'down'; }
+		else if (player.dir[1] < 0) { anim_name = 'up'; }
+		else if (player.dir[0] > 0) { anim_name = 'right'; }
+		else if (player.dir[0] < 0) { anim_name = 'left'; }
+		reaper.walk[anim_name].draw(reaper.walk[anim_name].img, 1, dt, 0);
 		ctx.restore();
 	}
 }
