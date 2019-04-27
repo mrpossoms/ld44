@@ -34,7 +34,10 @@ var $G_VOLUME = 1.0; // Master volume
 var $G = {
 	canvas: null,
     init: function(gameLoop, canvasId){
-		this.canvas = document.getElementById(canvasId)
+
+        if (canvasId != null) {
+		  this.canvas = document.getElementById(canvasId)
+        }
 
         // Initialize keyboard
         $G_KEYS = new Array(222);
@@ -108,7 +111,8 @@ var $G = {
         },
         mouse: {
             setMove:  function(cb){ $G.canvas.addEventListener("mousemove", function(e){ e.preventDefault(); cb(e); }, false); },
-            setClick: function(cb) { $G.canvas.addEventListener("click", cb, false) },
+            setClick: function(cb) { $G.canvas.addEventListener("mousedown", cb, false) },
+            setClickEnd: function(cb) { $G.canvas.addEventListener("mouseup", cb, false) },
         },
         gamepad: {
 
