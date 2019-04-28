@@ -34,7 +34,7 @@ function MessageQueue()
 	{
 		if (this.messages.length == 0) { return; }
 
-		draw_text([320 / 2, 16], this.messages[0]);
+		draw_text([320 / 2, 320 / 2 - 64], this.messages[0]);
 		this.counter--;
 		
 		if (this.counter <= 0)
@@ -119,17 +119,26 @@ function draw_text(pos, str, size)
 	ctx.textAlign = 'center';
 	ctx.font = size + 'px arial';
 
-	ctx.fillStyle = '#333';
-	const dt = 2 * Math.PI / 10;
-	for (var i = 10; i--;)
+	function draw_line(pos, str)
 	{
-		var t = dt * i;
-		var off = pos.add_vec([Math.cos(t) * 2, Math.sin(t) * 2]).floor();
-		ctx.fillText(str, off[0], off[1]);
+		ctx.fillStyle = '#333';
+		const dt = 2 * Math.PI / 10;
+		for (var i = 10; i--;)
+		{
+			var t = dt * i;
+			var off = pos.add_vec([Math.cos(t) * 2, Math.sin(t) * 2]).floor();
+			ctx.fillText(str, off[0], off[1]);
+		}
+
+		ctx.fillStyle = '#FFF';
+		ctx.fillText(str, pos[0], pos[1]);
 	}
 
-	ctx.fillStyle = '#FFF';
-	ctx.fillText(str, pos[0], pos[1]);
+	var lines = str.split('\n');
+	for (var i = 0; i < lines.length; ++i)
+	{
+		draw_line(pos.add_vec([0, i * size]), lines[i]);
+	}
 
 	ctx.restore();
 }
