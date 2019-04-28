@@ -235,7 +235,7 @@ function start(){
 		reaper.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 6, $G.assets.images['Grim_walk_' + dir + '.png'])
 		reaper.attack[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 15, $G.assets.images['Grim_attack_' + dir + '.png'])
 		human.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 4, 6, $G.assets.images['scientist_walk_' + dir + '.png'])
-		human.death[dir] = new $G.animation.sprite(0, 0, 32, 32, 4, 6, $G.assets.images['scientist_death_' + dir + '.png'])
+		human.death[dir] = new $G.animation.sprite(0, 0, 32, 32, 10, 10, $G.assets.images['scientist_death_' + dir + '.png'])
 	}
 
 	for (var num in { '1': 0 })

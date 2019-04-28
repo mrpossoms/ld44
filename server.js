@@ -81,6 +81,7 @@ function player_con(player)
 		move: false,
 		hp: 100,
 		damage: 1,
+		souls: 0,
 		id: player_id,
 		action: {
 			name: '',
@@ -145,13 +146,19 @@ module.exports.server = function(http, port) {
 				for (var id in humans)
 				{
 					var human = humans[id];
-					
+					var last_hp = human.hp;
+
 					if (human.pos.dist(player.state.pos) <= 16)
 					{
 						human.hp -= player.state.damage;
 					}
 
-					if (human.hp <= 0) { delete humans[id]; }
+					if (human.hp <= 0 && last_hp > 0)
+					{
+						player.state.souls++;
+						human.action.name = 'death';
+						human.action.progress = 60;
+					}
 				}
 
 				player.state.action.progress--;
@@ -169,8 +176,21 @@ module.exports.server = function(http, port) {
 		for (var id in humans)
 		{
 			var human = humans[id];
-			var diff = human.pos.sub_vec([320 >> 1, 320 >> 1]);
+		
+			if (human.action.name == 'death' && human.action.progress <= 0)
+			{
+				delete humans[id];
+				continue;
+			}
 
+			if (human.action.progress > 0)
+			{
+				human.action.progress--;
+				if (human.action.name == 'death') { continue; }
+			}
+			else { human.action.name = ''; }
+
+			var diff = human.pos.sub_vec([320 >> 1, 320 >> 1]);
 			if (diff.dist() > 32)
 			{
 				human.dir = diff.norm().scale(-0.1);
