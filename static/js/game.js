@@ -161,11 +161,11 @@ function draw_state(s, dt)
 
 		var char_type = human;
 
-		if (character.name) { char_type = reaper; }
+		if (character.name != undefined) { char_type = reaper; }
 
 		//if (character.name)
 		{ // check if player
-			draw_character(reaper, character, dt, function(c) {
+			draw_character(char_type, character, dt, function(c) {
 				switch(c.action.name)
 				{
 					case 'attack': return 'attack';
