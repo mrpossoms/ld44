@@ -278,7 +278,6 @@ module.exports.server = function(http, port) {
 			for (var id in players)
 			{
 				players[id].send_game_message('wave ' + wave);
-				players[id].send_game_message('[img]Button.png');
 				players[id].send_game_message(spawn_msgs.choose_one());
 			}
 		}
@@ -326,7 +325,13 @@ module.exports.server = function(http, port) {
 
 		var player_states = [], human_states = [];
 		for (var id in players) { player_states.push(players[id].state); }
-		for (var id in humans) { human_states.push(humans[id]); }
+		for (var id in humans) {
+			if (humans[id].pos[0] > -16)
+			if (humans[id].pos[0] < 336)
+			if (humans[id].pos[1] > -16)
+			if (humans[id].pos[1] < 336)
+				human_states.push(humans[id]);
+		}
 
 
 		// send states to players

@@ -69,6 +69,8 @@ var time = 0;
 
 ground = [];
 well = null;
+help = null;
+controls = null;
 reaper = {
 	walk: {
 		down: null,
@@ -106,6 +108,7 @@ var images = [
 'ground3.png',
 'well.png',
 'Button.png',
+'controls.png',
 'Grim_walk_down.png',
 'Grim_walk_right.png',
 'Grim_walk_up.png',
@@ -229,6 +232,17 @@ function draw_state(s, dt)
 		ground[key].draw(ground[key].img, 1, 0, 0);
 		ctx.restore();
 	}
+
+	ctx.save();
+	ctx.transVec([0, 320 - help.img.height]);
+	help.draw(help.img, 1, 0, 0);
+	ctx.restore();	
+
+	ctx.save();
+	ctx.transVec([320 - controls.img.width, 320 - controls.img.height]);
+	controls.draw(controls.img, 1, 0, 0);
+	ctx.restore();	
+
 
 	if (s == null) { return; }
 
@@ -357,4 +371,10 @@ function start(){
 	}
 	
 	well = new $G.animation.sprite(0, 0, 58, 41, 1, 0, $G.assets.images['well.png'])
+
+	var help_img = $G.assets.images['Button.png'];
+	help = new $G.animation.sprite(0, 0, help_img.width, help_img.height, 1, 0, help_img);
+
+	var con_img = $G.assets.images['controls.png'];
+	controls = new $G.animation.sprite(0, 0, con_img.width, con_img.height, 1, 0, con_img);
 }
