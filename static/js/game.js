@@ -52,6 +52,7 @@ var paused = true;
 var time = 0;
 
 ground = [];
+well = null;
 reaper = {
 	walk: {
 		down: null,
@@ -85,6 +86,9 @@ human = {
 
 var images = [
 'ground1.png',
+'ground2.png',
+'ground3.png',
+'well.png',
 'Grim_walk_down.png',
 'Grim_walk_right.png',
 'Grim_walk_up.png',
@@ -176,6 +180,9 @@ function draw_character(character_type, character, dt, anim_cb)
 	ctx.restore();
 }
 
+var ground_table = [];
+for (var i = 7; i--;) { ground_table.push(Math.ceil(Math.random() * 3).toString()); }
+
 function draw_state(s, dt)
 {
 	var chars = [ reaper, human ]
@@ -195,13 +202,14 @@ function draw_state(s, dt)
 	{
 		ctx.save();
 		ctx.transVec([c * 32, r * 32]);
-		ground['1'].draw(ground['1'].img, 1, 0, 0);
+		var key = ground_table[(r * 10 + c) % ground_table.length];
+		ground[key].draw(ground[key].img, 1, 0, 0);
 		ctx.restore();
 	}
 
 	if (s == null) { return; }
 
-	var all_sprites = s.players.concat(s.humans);
+	var all_sprites = s.players.concat(s.humans, [{type:'well', pos: [320/2, 320/2]}]);
 
 	all_sprites.sort(function(p0, p1) { return p1.pos[1] - p0.pos[1]; });
 
@@ -234,7 +242,15 @@ function draw_state(s, dt)
 
 		if (character.name != undefined) { char_type = reaper; }
 
-		//if (character.name)
+		if (character.type == 'well')
+		{
+			ctx.save();
+			ctx.transVec(character.pos);
+			ctx.transVec([-well.img.width/2, -well.img.height/2]);
+			well.draw(well.img, 1, 0, 0);
+			ctx.restore();		
+		}
+		else
 		{ // check if player
 			draw_character(char_type, character, dt, function(c) {
 				switch(c.action.name)
@@ -320,10 +336,10 @@ function start(){
 		human.death[dir] = new $G.animation.sprite(0, 0, 32, 32, 10, 10, $G.assets.images['scientist_death_' + dir + '.png'])
 	}
 
-	for (var num in { '1': 0 })
+	for (var num in { '1': 0, '2':0, '3':0})
 	{
 		ground[num] = new $G.animation.sprite(0, 0, 32, 32, 1, 0, $G.assets.images['ground' + num + '.png'])
 	}
-
-	ctx.font = '12px arial';
+	
+	well = new $G.animation.sprite(0, 0, 58, 41, 1, 0, $G.assets.images['well.png'])
 }
