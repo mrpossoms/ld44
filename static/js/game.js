@@ -40,6 +40,12 @@ human = {
 		up: null,
 		left: null,
 		right: null
+	},
+	death: {
+		down: null,
+		up: null,
+		left: null,
+		right: null
 	}
 };
 
@@ -57,6 +63,10 @@ var images = [
 'scientist_walk_right.png',
 'scientist_walk_up.png',
 'scientist_walk_left.png',
+'scientist_death_down.png',
+'scientist_death_right.png',
+'scientist_death_up.png',
+'scientist_death_left.png'
 ];
 
 $G.assets.images("imgs/").load(images, function(){
@@ -77,10 +87,19 @@ function draw_character(character_type, character, dt, anim_cb)
 
 	if (anim_cb) { anim_name = anim_cb(character); }
 
-	if (character.dir[1] > 0) { anim_dir = 'down'; }
-	else if (character.dir[1] < 0) { anim_dir = 'up'; }
-	else if (character.dir[0] > 0) { anim_dir = 'right'; }
-	else if (character.dir[0] < 0) { anim_dir = 'left'; }
+	var x_mag = Math.abs(character.dir[0]);
+	var y_mag = Math.abs(character.dir[1]);
+
+	if (y_mag > x_mag)
+	{
+		if (character.dir[1] > 0) { anim_dir = 'down'; }
+		else if (character.dir[1] < 0) { anim_dir = 'up'; }
+	}
+	else
+	{
+		if (character.dir[0] > 0) { anim_dir = 'right'; }
+		else if (character.dir[0] < 0) { anim_dir = 'left'; }
+	}
 
 	character_type[anim_name][anim_dir].draw(character_type[anim_name][anim_dir].img, 1, 0, 0);
 	ctx.restore();
@@ -140,21 +159,20 @@ function draw_state(s, dt)
 		ctx.restore();
 		*/
 
-		if (character.action)
-		{
+		var char_type = human;
+
+		if (character.name) { char_type = reaper; }
+
+		//if (character.name)
+		{ // check if player
 			draw_character(reaper, character, dt, function(c) {
 				switch(c.action.name)
 				{
-					case 'attack':
-						return 'attack';
-						break;
+					case 'attack': return 'attack';
+					case 'death': return 'death';
 					default: return 'walk';
 				}
 			});
-		}
-		else
-		{
-			draw_character(human, character, dt);
 		}
 	}
 }
@@ -217,6 +235,7 @@ function start(){
 		reaper.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 6, $G.assets.images['Grim_walk_' + dir + '.png'])
 		reaper.attack[dir] = new $G.animation.sprite(0, 0, 32, 32, 6, 15, $G.assets.images['Grim_attack_' + dir + '.png'])
 		human.walk[dir] = new $G.animation.sprite(0, 0, 32, 32, 4, 6, $G.assets.images['scientist_walk_' + dir + '.png'])
+		human.death[dir] = new $G.animation.sprite(0, 0, 32, 32, 4, 6, $G.assets.images['scientist_death_' + dir + '.png'])
 	}
 
 	for (var num in { '1': 0 })

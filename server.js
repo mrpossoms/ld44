@@ -54,11 +54,15 @@ function spawn_human_wave(number)
 	for (;number--;)
 	{
 		var t = Math.random() * (2 * 3.14);
-		var r = (Math.random() * 50) + 230;
+		var r = (Math.random() * (100 + number)) + 230;
 		humans[number] = {
 			pos: [ r * Math.cos(t) + (320 >> 1), r * Math.sin(t) + (320 >> 1) ],
 			dir: [ 0, 0 ],
 			hp: 1,
+			action: {
+				name: '',
+				progress: 0
+			}
 		};
 	}
 }
