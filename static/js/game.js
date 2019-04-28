@@ -5,6 +5,13 @@ Array.prototype.add_vec = function(arr)
         return a;
 }
 
+Array.prototype.floor = function()
+{
+        var a = new Array(this.length);
+        for (var i = this.length; i--;) { a[i] = Math.floor(this[i]); }
+        return a;
+}
+
 var lastTouchPos;
 
 var state = {
@@ -77,9 +84,32 @@ function aspectRatio(){
 	return $G.canvas.height / $G.canvas.width;
 }
 
+function draw_text(pos, str)
+{
+	ctx.save();
+	ctx.textAlign = 'center';
+	ctx.font = '12px arial';
+
+	ctx.fillStyle = '#333';
+	const dt = 2 * Math.PI / 10;
+	for (var i = 10; i--;)
+	{
+		var t = dt * i;
+		var off = pos.add_vec([Math.cos(t) * 2, Math.sin(t) * 2]).floor();
+		ctx.fillText(str, off[0], off[1]);
+	}
+
+	ctx.fillStyle = '#FFF';
+	ctx.font = '12px arial';
+	ctx.fillText(str, pos[0], pos[1]);
+
+	ctx.restore();
+}
+
 function draw_character(character_type, character, dt, anim_cb)
 {
 	ctx.save();
+	character.pos = character.pos.floor();
 	ctx.transVec(character.pos.add_vec([-16, -16]));
 	
 	var anim_name = 'walk';
@@ -175,6 +205,8 @@ function draw_state(s, dt)
 			});
 		}
 	}
+
+	draw_text([320 / 2, 320 / 2], "Hello, World");
 }
 
 function loop(){
