@@ -278,6 +278,7 @@ module.exports.server = function(http, port) {
 			for (var id in players)
 			{
 				players[id].send_game_message('wave ' + wave);
+				players[id].send_game_message('[img]Button.png');
 				players[id].send_game_message(spawn_msgs.choose_one());
 			}
 		}
