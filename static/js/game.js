@@ -230,7 +230,7 @@ function draw_state(s, dt)
 		{
 			ctx.save();
 			ctx.transVec(character.pos);
-			ctx.transVec([-well.img.width/2, -well.img.height/2]);
+			ctx.transVec([Math.floor(-well.img.width/2), Math.floor(-well.img.height/2)]);
 			well.draw(well.img, 1, 0, 0);
 			ctx.restore();		
 		}

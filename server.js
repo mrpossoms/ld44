@@ -7,6 +7,7 @@ const KNOWLEDGE_NEEDED = 1000;
 
 var players = {};
 var humans = {};
+var wave = 0;
 var human_knowledge_needed = KNOWLEDGE_NEEDED;
 var failure_spawn_sequence = FAILURE_SEQ;
 
@@ -119,9 +120,17 @@ function player_con(player)
 			cool_down: 0
 		}
 	};
+
 	player.send_game_message = function(str)
 	{
 		player.send({ command: 'game_message', payload: { message: str } });
+	}
+
+	player.reset = function()
+	{
+		player.state.aoe = 1;
+		player.state.dash = 1;
+		player.state.souls = 0;
 	}
 
 	if (count(players) > 4)
@@ -185,11 +194,23 @@ function player_con(player)
 	});
 }
 
+
 module.exports.server = function(http, port) {
 	var io = require('socket.io')(http);
 	io.on('connection', player_con);
 
 	var wave_size = START_WAVE_SIZE;
+
+	function reset_game()
+	{
+		wave = 0;
+		wave_size = START_WAVE_SIZE;
+		human_knowledge_needed = KNOWLEDGE_NEEDED;
+		failure_spawn_sequence = FAILURE_SEQ;
+		humans = {};
+
+		for (var id in players) { players[id].reset(); }
+	}
 
 	// do game state update
 	setInterval(function() {
@@ -197,7 +218,7 @@ module.exports.server = function(http, port) {
 		if (isEmpty(players))
 		{
 			wave_size = START_WAVE_SIZE;
-			humans = {};
+			reset_game();
 			return;
 		}
 
@@ -251,10 +272,14 @@ module.exports.server = function(http, port) {
 		{
 			wave_size = Math.ceil(wave_size * 1.5);
 			spawn_human_wave(wave_size, null);
+			wave++;
 
 			var spawn_msgs = ['They persist...', 'More are coming...', 'They are not detured...'];
 			for (var id in players)
+			{
+				players[id].send_game_message('wave ' + wave);
 				players[id].send_game_message(spawn_msgs.choose_one());
+			}
 		}
 
 		//console.log(JSON.stringify(humans));
@@ -322,5 +347,7 @@ module.exports.server = function(http, port) {
 				players[id].send_game_message("Humans have achieved immortality...");
 			}
 		}
+
+		if (failed_this_frame) { setTimeout(function() { reset_game(); }, 10000); }
 	}, 16);
 };
