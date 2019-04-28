@@ -1,3 +1,9 @@
+Array.prototype.add_vec = function(arr)
+{
+        var a = new Array(this.length);
+        for (var i = this.length; i--;) { a[i] = this[i] + arr[i]; }
+        return a;
+}
 
 var lastTouchPos;
 
@@ -64,7 +70,7 @@ function aspectRatio(){
 function draw_character(character_type, character, dt, anim_cb)
 {
 	ctx.save();
-	ctx.transVec(character.pos);
+	ctx.transVec(character.pos.add_vec([-16, -16]));
 	
 	var anim_name = 'walk';
 	var anim_dir = 'down';
@@ -76,12 +82,24 @@ function draw_character(character_type, character, dt, anim_cb)
 	else if (character.dir[0] > 0) { anim_dir = 'right'; }
 	else if (character.dir[0] < 0) { anim_dir = 'left'; }
 
-	character_type[anim_name][anim_dir].draw(character_type[anim_name][anim_dir].img, 1, dt, 0);
+	character_type[anim_name][anim_dir].draw(character_type[anim_name][anim_dir].img, 1, 0, 0);
 	ctx.restore();
 }
 
 function draw_state(s, dt)
 {
+	var chars = [ reaper, human ]
+	for (var ci = chars.length; ci--;)
+	{
+		for (var anim_name in chars[ci])
+		{
+			for (var dir in chars[ci][anim_name])
+			{
+				chars[ci][anim_name][dir].Time += dt;
+			}
+		}
+	}
+
 	for (var r = 0; r < 10; ++r)
 	for (var c = 0; c < 10; ++c)
 	{
