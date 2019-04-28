@@ -19,6 +19,33 @@ var state = {
 	current: null,
 };
 
+function MessageQueue()
+{
+	this.messages = [];
+	this.counter = 0;
+
+	this.add = function(str) 
+	{
+		this.messages.push(str);
+		this.counter = str.length * 5;
+	}
+
+	this.draw = function()
+	{
+		if (this.messages.length == 0) { return; }
+
+		draw_text([320 / 2, 16], this.messages[0]);
+		this.counter--;
+		
+		if (this.counter <= 0)
+		{
+			this.messages.shift();
+			if (this.messages.length) this.counter = this.messages[0].length * 5;
+		}
+	}
+}
+
+var msg_queue = new MessageQueue();
 var ctx;
 var socket = null;
 var paused = true;
@@ -84,11 +111,13 @@ function aspectRatio(){
 	return $G.canvas.height / $G.canvas.width;
 }
 
-function draw_text(pos, str)
+function draw_text(pos, str, size)
 {
+	if (!size) size = 12;
+
 	ctx.save();
 	ctx.textAlign = 'center';
-	ctx.font = '12px arial';
+	ctx.font = size + 'px arial';
 
 	ctx.fillStyle = '#333';
 	const dt = 2 * Math.PI / 10;
@@ -100,7 +129,6 @@ function draw_text(pos, str)
 	}
 
 	ctx.fillStyle = '#FFF';
-	ctx.font = '12px arial';
 	ctx.fillText(str, pos[0], pos[1]);
 
 	ctx.restore();
@@ -132,6 +160,10 @@ function draw_character(character_type, character, dt, anim_cb)
 	}
 
 	character_type[anim_name][anim_dir].draw(character_type[anim_name][anim_dir].img, 1, 0, 0);
+	if (character.souls != undefined)
+	{
+		draw_text([16, 42], 'souls: ' + character.souls, 8);
+	}
 	ctx.restore();
 }
 
@@ -206,7 +238,7 @@ function draw_state(s, dt)
 		}
 	}
 
-	draw_text([320 / 2, 320 / 2], "Hello, World");
+	msg_queue.draw();
 }
 
 function loop(){
@@ -236,6 +268,9 @@ function loop(){
 	if (moving) { socket.send({ command: 'move', payload: { dir: dir }}); }
 
 	if ($G.input.keyboard.IsKeyDown(32)) {
+		socket.send({ command: 'dash', payload: { }});
+	}
+	if ($G.input.keyboard.IsKeyDown(13)) {
 		socket.send({ command: 'attack', payload: { }});
 	}
 
@@ -254,6 +289,9 @@ function start(){
 				state.last = state.current;
 				state.current = msg.payload;
 				break;
+			case 'game_message':
+				msg_queue.add(msg.payload.message);
+				break;
 		}
 	});
 
@@ -261,6 +299,9 @@ function start(){
 	ctx.transVec = function(v){
 		this.translate(v[0], v[1]);
 	};
+
+	$G.input.mouse.setClick(function() { socket.send({ command: 'attack', payload: { }}); });
+	//$G.touch.setClick(function() { socket.send({ command: 'attack', payload: { }}); });
 
 	for (var dir in {'down':0, 'up':0, 'left':0, 'right':0})
 	{

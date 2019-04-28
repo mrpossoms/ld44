@@ -1,4 +1,7 @@
 const ATTACK_FRAMES = 10;
+const DEATH_FRAMES = 60;
+const START_WAVE_SIZE = 4;
+const DASH_FRAMES = 10;
 
 var players = {};
 var humans = {};
@@ -17,6 +20,11 @@ Array.prototype.add_vec = function(arr)
 	var a = new Array(this.length);
 	for (var i = this.length; i--;) { a[i] = this[i] + arr[i]; }
 	return a;
+}
+
+Array.prototype.choose_one = function()
+{
+	return this[Math.floor(Math.random() * this.length)];
 }
 
 Array.prototype.sub_vec = function(arr)
@@ -67,6 +75,14 @@ function spawn_human_wave(number)
 	}
 }
 
+var story_prompt = [
+	'Welcome fellow reaper...',
+	'The enterprising humans are seeking...',
+	'the knowledge to twart us through...',
+	'their science.',
+	'Cut them down... Keep humanity at bay.'
+];
+
 function player_con(player)
 {
 	player_id = 0;
@@ -88,10 +104,17 @@ function player_con(player)
 			progress: 0
 		}
 	};
+	player.send_game_message = function(str)
+	{
+		player.send({ command: 'game_message', payload: { message: str } });
+	}
 
 	players[player.state.id] = player;
 
 	console.log('Player:' + player.state.id + ' connected'); 
+	
+	for (var i = 0; i < story_prompt.length; ++i)
+		player.send_game_message(story_prompt[i]);
 
 	player.on('message', function incoming(msg) {
 		if (typeof(msg.command) !== 'string') { return; }
@@ -104,6 +127,10 @@ function player_con(player)
 			case 'attack':
 				player.state.action.name = msg.command;
 				player.state.action.progress = ATTACK_FRAMES;
+				break;
+			case 'dash':
+				player.state.action.name = msg.command;
+				player.state.action.progress = DASH_FRAMES;
 				break;
 			case 'name':
 				player.state.name = msg.payload.name;
@@ -121,23 +148,23 @@ module.exports.server = function(http, port) {
 	var io = require('socket.io')(http);
 	io.on('connection', player_con);
 
-	var wave_size = 10;
-	spawn_human_wave(wave_size);
+	var wave_size = START_WAVE_SIZE;
 
 	// do game state update
 	setInterval(function() {
 
-		if (isEmpty(players)) { return; }
+		if (isEmpty(players))
+		{
+			wave_size = START_WAVE_SIZE;
+			humans = {};
+			return;
+		}
 
 		// update state
 		for (var id in players)
 		{
 			var player = players[id];
-			if (player.state.move)
-			{
-				player.state.pos = player.state.pos.add_vec(player.state.dir);
-				player.state.move = false;
-			}
+
 			
 			if (player.state.action.progress > 0)
 			{
@@ -157,19 +184,35 @@ module.exports.server = function(http, port) {
 					{
 						player.state.souls++;
 						human.action.name = 'death';
-						human.action.progress = 60;
+						human.action.progress = DEATH_FRAMES;
 					}
+				}
+				
+				if (player.state.action.name == 'dash')
+				{
+					player.state.move = true;
+					player.state.dir = player.state.dir.norm().scale(3);
 				}
 
 				player.state.action.progress--;
 			}
 			else { player.state.action.name = ''; }
+
+			if (player.state.move)
+			{
+				player.state.pos = player.state.pos.add_vec(player.state.dir);
+				player.state.move = false;
+			}
 		}
 
 		if (isEmpty(humans))
 		{
 			wave_size = Math.ceil(wave_size * 1.5);
 			spawn_human_wave(wave_size);
+
+			var spawn_msgs = ['They persist...', 'More are coming...', 'They are not detured...'];
+			for (var id in players)
+				players[id].send_game_message(spawn_msgs.choose_one());
 		}
 
 		//console.log(JSON.stringify(humans));
