@@ -115,9 +115,10 @@ function aspectRatio(){
 	return $G.canvas.height / $G.canvas.width;
 }
 
-function draw_text(pos, str, size)
+function draw_text(pos, str, size, color)
 {
 	if (!size) size = 12;
+	if (!color) color = '#F00';
 
 	ctx.save();
 	ctx.textAlign = 'center';
@@ -134,7 +135,7 @@ function draw_text(pos, str, size)
 			ctx.fillText(str, off[0], off[1]);
 		}
 
-		ctx.fillStyle = '#FFF';
+		ctx.fillStyle = color;
 		ctx.fillText(str, pos[0], pos[1]);
 	}
 
@@ -175,7 +176,12 @@ function draw_character(character_type, character, dt, anim_cb)
 	character_type[anim_name][anim_dir].draw(character_type[anim_name][anim_dir].img, 1, 0, 0);
 	if (character.souls != undefined)
 	{
-		draw_text([16, 42], 'souls: ' + character.souls, 8);
+		draw_text(
+			[16, 42],
+			'souls: ' + character.souls,
+			8, 
+			character.id == state.current.me.id ? '#0F0' : '#F00'
+		);
 	}
 	ctx.restore();
 }
@@ -216,28 +222,6 @@ function draw_state(s, dt)
 	for (var i = all_sprites.length; i--;)
 	{
 		var character = all_sprites[i];
-		/*
-		ctx.save();
-		ctx.transVec(player.pos);
-		
-		var anim_name = 'walk';
-		var anim_dir = 'down';
-		switch(player.action.name)
-		{
-			case 'attack':
-				anim_name = 'attack';
-				break;
-		}
-
-		if (player.dir[1] > 0) { anim_dir = 'down'; }
-		else if (player.dir[1] < 0) { anim_dir = 'up'; }
-		else if (player.dir[0] > 0) { anim_dir = 'right'; }
-		else if (player.dir[0] < 0) { anim_dir = 'left'; }
-
-		reaper[anim_name][anim_dir].draw(reaper[anim_name][anim_dir].img, 1, dt, 0);
-		ctx.restore();
-		*/
-
 		var char_type = human;
 
 		if (character.name != undefined) { char_type = reaper; }
@@ -264,6 +248,7 @@ function draw_state(s, dt)
 	}
 
 	msg_queue.draw();
+	draw_text([320/2, 16], "Knowledge needed: " + state.current.knowledge_needed);
 }
 
 function loop(){
@@ -325,6 +310,14 @@ function start(){
 		this.translate(v[0], v[1]);
 	};
 
+	$G.input.touch.setMove(function(e) {
+		var me = state.current.me;
+		var dx = pageX - me.pos[0], dy = pageY - me.pos[1];
+		socket.send({ command: 'move', payload: { dir: [
+			dx / Math.abs(dx),
+			dy / Math.abs(dy)
+		]}});
+	});
 	$G.input.mouse.setClick(function() { socket.send({ command: 'attack', payload: { }}); });
 	//$G.touch.setClick(function() { socket.send({ command: 'attack', payload: { }}); });
 
