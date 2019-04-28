@@ -34,13 +34,29 @@ function MessageQueue()
 	{
 		if (this.messages.length == 0) { return; }
 
-		draw_text([320 / 2, 320 / 2 - 64], this.messages[0]);
+		var pos = [320 / 2, 320 / 2 - 64];
+		if (this.messages[0].indexOf('[img]') >= 0)
+		{
+			var key = this.messages[0].replace('[img]', '');
+			var img = $G.assets.images[key];
+			ctx.save();
+			$G.gfx.context.drawImage(img, pos[0] - img.width / 2, pos[1]);
+			ctx.restore();	
+		}
+		else
+		{
+			draw_text(pos, this.messages[0]);
+		}
+
 		this.counter--;
 		
 		if (this.counter <= 0)
 		{
 			this.messages.shift();
-			if (this.messages.length) this.counter = this.messages[0].length * 5;
+			if (this.messages.length) {
+				this.counter = this.messages[0].length * 5;
+				if (this.messages[0].indexOf('[img]') != -1) { this.counter *= 2; }
+			}
 		}
 	}
 }
@@ -89,6 +105,7 @@ var images = [
 'ground2.png',
 'ground3.png',
 'well.png',
+'Button.png',
 'Grim_walk_down.png',
 'Grim_walk_right.png',
 'Grim_walk_up.png',
@@ -230,7 +247,7 @@ function draw_state(s, dt)
 		{
 			ctx.save();
 			ctx.transVec(character.pos);
-			ctx.transVec([-well.img.width/2, -well.img.height/2]);
+			ctx.transVec([Math.floor(-well.img.width/2), Math.floor(-well.img.height/2)]);
 			well.draw(well.img, 1, 0, 0);
 			ctx.restore();		
 		}
@@ -283,7 +300,12 @@ function loop(){
 	if ($G.input.keyboard.IsKeyDown(13)) {
 		socket.send({ command: 'attack', payload: { }});
 	}
-
+	if ($G.input.keyboard.WasKeyPressed(84)) { // T
+		socket.send({ command: 'buy', payload: { upgrade_name: 'aoe' }});
+	}
+	if ($G.input.keyboard.WasKeyPressed(89)) { // Y
+		socket.send({ command: 'buy', payload: { upgrade_name: 'dash' }});
+	}
 	if(paused){
 	}
 }
