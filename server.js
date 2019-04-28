@@ -77,10 +77,8 @@ function spawn_human_wave(number)
 
 var story_prompt = [
 	'Welcome fellow reaper...',
-	'The enterprising humans are seeking...',
-	'the knowledge to twart us through...',
-	'their science.',
-	'Cut them down... Keep humanity at bay.'
+	'The enterprising humans are seeking\nthe knowledge to thwart death through\ntheir science.',
+	'Cut them down...\nKeep them from the well of knowledge.'
 ];
 
 function player_con(player)
