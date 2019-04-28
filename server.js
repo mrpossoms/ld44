@@ -19,6 +19,13 @@ var isEmpty = function(dic)
 	return true;
 }
 
+var count = function(dic)
+{
+	var c = 0;
+	for (var key in dic) { c++; }
+	return c;
+}
+
 Array.prototype.add_vec = function(arr)
 {
 	var a = new Array(this.length);
@@ -117,13 +124,22 @@ function player_con(player)
 		player.send({ command: 'game_message', payload: { message: str } });
 	}
 
+	if (count(players) > 4)
+	{
+		player.send_game_message('Sorry, the server is full');
+		setTimeout(function() {player.disconnect(true);}, 2000);
+		//return;
+	}
+	else
+	{
+		for (var i = 0; i < story_prompt.length; ++i)
+			player.send_game_message(story_prompt[i]);
+	}
+
+
 	players[player.state.id] = player;
 
 	console.log('Player:' + player.state.id + ' connected'); 
-	
-	for (var i = 0; i < story_prompt.length; ++i)
-		player.send_game_message(story_prompt[i]);
-
 	player.on('message', function incoming(msg) {
 		if (typeof(msg.command) !== 'string') { return; }
 		switch (msg.command)
