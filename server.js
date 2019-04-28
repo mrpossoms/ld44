@@ -1,10 +1,14 @@
 const ATTACK_FRAMES = 10;
 const DEATH_FRAMES = 60;
 const START_WAVE_SIZE = 4;
-const DASH_FRAMES = 10;
+const DASH_FRAMES = 4;
+const FAILURE_SEQ = 300;
+const KNOWLEDGE_NEEDED = 1000;
 
 var players = {};
 var humans = {};
+var human_knowledge_needed = KNOWLEDGE_NEEDED;
+var failure_spawn_sequence = FAILURE_SEQ;
 
 var isEmpty = function(dic)
 {
@@ -57,13 +61,16 @@ Array.prototype.dist = function(arr)
 	return Math.sqrt(dist);
 }
 
-function spawn_human_wave(number)
+function spawn_human_wave(number, r)
 {
+	var do_rand_rad = r == null;
 	for (;number--;)
 	{
 		var t = Math.random() * (2 * 3.14);
-		var r = (Math.random() * (100 + number)) + 230;
-		humans[number] = {
+
+		if (do_rand_rad) { r = (Math.random() * (100 + number)) + 230; }
+
+		humans[Math.floor(Math.random() * 4096)] = {
 			pos: [ r * Math.cos(t) + (320 >> 1), r * Math.sin(t) + (320 >> 1) ],
 			dir: [ 0, 0 ],
 			hp: 1,
@@ -95,11 +102,14 @@ function player_con(player)
 		move: false,
 		hp: 100,
 		damage: 1,
+		aoe: 1,
+		dash: 1,
 		souls: 0,
 		id: player_id,
 		action: {
 			name: '',
-			progress: 0
+			progress: 0,
+			cool_down: 0
 		}
 	};
 	player.send_game_message = function(str)
@@ -127,8 +137,25 @@ function player_con(player)
 				player.state.action.progress = ATTACK_FRAMES;
 				break;
 			case 'dash':
-				player.state.action.name = msg.command;
-				player.state.action.progress = DASH_FRAMES;
+				if (player.state.action.cool_down == 0)
+				{
+					player.state.action.name = msg.command;
+					player.state.action.progress = DASH_FRAMES * player.state.dash;
+					player.state.action.cool_down = DASH_FRAMES * 20;
+				}
+				break;
+			case 'buy':
+				var upgrade = msg.payload.upgrade_name;
+				var cost = Math.pow(10, player.state[upgrade]);
+				if (player.state.souls >= cost)
+				{
+					player.state[upgrade]++;
+					player.state.souls -= cost;
+				}
+				else
+				{
+					player.send_game_message('Upgrade costs ' + cost + ' souls');
+				}
 				break;
 			case 'name':
 				player.state.name = msg.payload.name;
@@ -162,7 +189,6 @@ module.exports.server = function(http, port) {
 		for (var id in players)
 		{
 			var player = players[id];
-
 			
 			if (player.state.action.progress > 0)
 			{
@@ -173,7 +199,7 @@ module.exports.server = function(http, port) {
 					var human = humans[id];
 					var last_hp = human.hp;
 
-					if (human.pos.dist(player.state.pos) <= 16)
+					if (human.pos.dist(player.state.pos) <= player.state.aoe * 8)
 					{
 						human.hp -= player.state.damage;
 					}
@@ -196,6 +222,8 @@ module.exports.server = function(http, port) {
 			}
 			else { player.state.action.name = ''; }
 
+			if (player.state.action.cool_down > 0) { player.state.action.cool_down--; }
+
 			if (player.state.move)
 			{
 				player.state.pos = player.state.pos.add_vec(player.state.dir);
@@ -206,7 +234,7 @@ module.exports.server = function(http, port) {
 		if (isEmpty(humans))
 		{
 			wave_size = Math.ceil(wave_size * 1.5);
-			spawn_human_wave(wave_size);
+			spawn_human_wave(wave_size, null);
 
 			var spawn_msgs = ['They persist...', 'More are coming...', 'They are not detured...'];
 			for (var id in players)
@@ -232,10 +260,25 @@ module.exports.server = function(http, port) {
 			else { human.action.name = ''; }
 
 			var diff = human.pos.sub_vec([320 >> 1, 320 >> 1]);
-			if (diff.dist() > 32)
+			if (diff.dist() > 32 && human_knowledge_needed > 0)
 			{
 				human.dir = diff.norm().scale(-0.1);
 				human.pos = human.pos.add_vec(human.dir);
+			}
+			else if (human_knowledge_needed > 0)
+			{
+				human_knowledge_needed -= 1;
+			}
+		}
+	
+		var failed_this_frame = failure_spawn_sequence == FAILURE_SEQ && human_knowledge_needed == 0;
+
+		if (human_knowledge_needed == 0)
+		{
+			if (failure_spawn_sequence)
+			{
+				failure_spawn_sequence--;
+				spawn_human_wave(1, 200 * Math.random());
 			}
 		}
 
@@ -252,9 +295,16 @@ module.exports.server = function(http, port) {
 				payload: {
 					players: player_states,
 					humans: human_states,
+					me: players[id].state,
+					knowledge_needed: human_knowledge_needed
 				}
 			});
-
+			
+			if (failed_this_frame)
+			{
+				players[id].send_game_message("We have failed...");
+				players[id].send_game_message("Humans have achieved immortality...");
+			}
 		}
 	}, 16);
 };
