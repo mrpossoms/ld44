@@ -3,7 +3,7 @@ const DEATH_FRAMES = 60;
 const START_WAVE_SIZE = 4;
 const DASH_FRAMES = 4;
 const FAILURE_SEQ = 300;
-const KNOWLEDGE_NEEDED = 1000;
+const KNOWLEDGE_NEEDED = 10000;
 
 var players = {};
 var humans = {};
@@ -215,7 +215,8 @@ module.exports.server = function(http, port) {
 	// do game state update
 	setInterval(function() {
 
-		if (isEmpty(players))
+		var player_count = count(players);
+		if (player_count == 0)
 		{
 			wave_size = START_WAVE_SIZE;
 			reset_game();
@@ -303,7 +304,7 @@ module.exports.server = function(http, port) {
 			var diff = human.pos.sub_vec([320 >> 1, 320 >> 1]);
 			if (diff.dist() > 32 && human_knowledge_needed > 0)
 			{
-				human.dir = diff.norm().scale(-0.1);
+				human.dir = diff.norm().scale(-(0.1 + (player_count * 0.025)));
 				human.pos = human.pos.add_vec(human.dir);
 			}
 			else if (human_knowledge_needed > 0)

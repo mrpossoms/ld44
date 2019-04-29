@@ -1,8 +1,9 @@
 var express = require('express');
+var path = require('path');
 var app = express();
 var game = require('./server.js');
 
-app.use(express.static('static'));
+app.use(express.static(path.join(__dirname, 'static')));
 
 app.get('/', function(req, res){
 	res.sendFile('index.html');
