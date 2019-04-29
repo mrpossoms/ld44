@@ -1,1 +1,1 @@
-web: node projective.js
+web: npm start 
